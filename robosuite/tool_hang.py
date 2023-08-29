@@ -817,7 +817,7 @@ class ToolHang(OldToolHang):
         camera_heights=256,
         camera_widths=256,
         camera_depths=False,
-        #randomization
+        #randomization of objects
         randomize_shapes = False, 
         stand_size0_range = None, 
         stand_size1_range = None, 
@@ -827,8 +827,30 @@ class ToolHang(OldToolHang):
         handle_size0_range = None,
         handle_size1_range = None,
         handle_size2_range = None,
+        #randomization of robot eef
+        robot_eef_init_randomization = False,
+        ##these should all be 3-tuples
+        robot_eef_pos_min = None,
+        robot_eef_pos_max = None,
+        robot_eef_rot_min = None,
+        robot_eef_rot_max = None,
 
     ):
+        
+        self.randomize_shapes = randomize_shapes
+        #for each param, pick a random number from the range
+        if self.randomize_shapes:
+            self.stand_size = [random.uniform(stand_size0_range[0], stand_size0_range[1]), random.uniform(stand_size1_range[0], stand_size1_range[1]), random.uniform(stand_size2_range[0], stand_size2_range[1])]
+            self.frame_length = random.uniform(frame_length_range[0], frame_length_range[1])
+            self.frame_height = random.uniform(frame_height_range[0], frame_height_range[1])
+            self.handle_size = [random.uniform(handle_size0_range[0], handle_size0_range[1]), random.uniform(handle_size1_range[0], handle_size1_range[1]), random.uniform(handle_size2_range[0], handle_size2_range[1])]
+
+        if robot_eef_init_randomization:            
+            #FOR SOME REASON, X AND Y ARE SWAPPED WHEN WE ACTUALLY GO AND TRANSPOSE. DO NOT KNOW WHY, THIS MAKES IT SO THAT THE USER DOESN'T HAVE TO REMEMBER THE SWAP
+            self.robot_eef_pos_min = np.array([robot_eef_pos_min[1], robot_eef_pos_min[0], robot_eef_pos_min[2]])
+            self.robot_eef_pos_max = np.array([robot_eef_pos_max[1], robot_eef_pos_max[0], robot_eef_pos_max[2]])
+            self.robot_eef_rot_min = np.array([robot_eef_rot_min[1], robot_eef_rot_min[0], robot_eef_rot_min[2]])
+            self.robot_eef_rot_max = np.array([robot_eef_rot_max[1], robot_eef_rot_max[0], robot_eef_rot_max[2]])
 
         super().__init__(
             robots=robots,
@@ -857,14 +879,6 @@ class ToolHang(OldToolHang):
             camera_widths=camera_widths,
             camera_depths=camera_depths,
         )
-
-        self.randomize_shapes = randomize_shapes
-        #for each param, pick a random number from the range
-        if self.randomize_shapes:
-            self.stand_size = [random.uniform(stand_size0_range[0], stand_size0_range[1]), random.uniform(stand_size1_range[0], stand_size1_range[1]), random.uniform(stand_size2_range[0], stand_size2_range[1])]
-            self.frame_length = random.uniform(frame_length_range[0], frame_length_range[1])
-            self.frame_height = random.uniform(frame_height_range[0], frame_height_range[1])
-            self.handle_size = [random.uniform(handle_size0_range[0], handle_size0_range[1]), random.uniform(handle_size1_range[0], handle_size1_range[1]), random.uniform(handle_size2_range[0], handle_size2_range[1])]
 
 
     def _load_model(self):
@@ -1021,4 +1035,45 @@ class ToolHang(OldToolHang):
             mujoco_objects=[self.stand, self.frame, self.tool],
         )
 
+    
+    def reset(self):
+        obs = super().reset()
+        
+        if self.robot_eef_init_randomization:
+            dpos = np.random.uniform(self.robot_eef_pos_min, self.robot_eef_pos_max)
+            drot = np.random.uniform(self.robot_eef_rot_min, self.robot_eef_rot_max)
+            obs = self.teleport(None, None, drot, dpos=dpos)
+
+        return obs
+    
+    def teleport(self, cur_ee_pos, des_ee_pos, delta_rot, dpos = None):
+        """
+        Teleports the robot to a specific position. 
+        Uses a delta rotation as well as either absolute current/desired pos or delta pos.
+        This requires an IK controller!
+
+        Args: 
+            env: an instantiated env you want to change
+            cur_ee_pos: current ee pose from obs.
+            des_ee_pos: desired ee pose.
+            delta_rot: delta rotation in euler angles
+            dpos: delta position. If you pass this in, cur_ee_pos and des_ee_pos can be None, tp will just use dpos to move the robot
+        """
+
+        if dpos is None:
+            dpos = des_ee_pos - cur_ee_pos
+
+        drot = euler2mat(delta_rot)
+
+        
+        robot = self.robots[0]
+        controller = robot.controller
+        controller.converge_steps=100
+
+        jpos = controller.joint_positions_for_eef_command(dpos, drot, update_targets=True)
+        robot.set_robot_joint_positions(jpos)
+
+        observations = self._get_observations(force_update=True)
+
+        return observations
     

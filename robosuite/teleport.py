@@ -37,7 +37,7 @@ def get_dpos(cur_ee_pos, des_ee_pos) -> np.ndarray:
 def teleport(env, cur_ee_pos, des_ee_pos, delta_rot, dpos = None):
     """
     Teleports the robot to a specific position. 
-    Uses a delta rotation as well as either absolute current/desired pos or delta pos
+    Uses a delta rotation as well as either absolute current/desired pos or delta pos.
     This requires an IK controller!
 
     Args: 

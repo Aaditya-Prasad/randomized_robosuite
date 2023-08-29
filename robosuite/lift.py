@@ -12,6 +12,8 @@ from robosuite.models.tasks import ManipulationTask
 from robosuite.utils.placement_samplers import UniformRandomSampler
 from robosuite.utils.observables import Observable, sensor
 
+from robosuite.utils.transform_utils import euler2mat
+
 import random
 
 class OldLift(SingleArmEnv):
@@ -546,12 +548,34 @@ class Lift(OldLift):
         camera_heights=256,
         camera_widths=256,
         camera_depths=False,
-
+        #shape randomization
         randomize_shapes = False, 
         block_min = None,
-        block_max = None
+        block_max = None,
+        #robot eef init randomization
+        robot_eef_init_randomization = False,
+        ##these should all be 3-tuples
+        robot_eef_pos_min = None,
+        robot_eef_pos_max = None,
+        robot_eef_rot_min = None,
+        robot_eef_rot_max = None,
     ):
 
+        self.randomize_shapes = randomize_shapes
+        if randomize_shapes:
+            self.block_min = block_min
+            self.block_max = block_max
+        else:
+            self.block_min = [0.020, 0.020, 0.020]
+            self.block_max = [0.022, 0.022, 0.022]
+
+        self.robot_eef_init_randomization = robot_eef_init_randomization
+        if robot_eef_init_randomization:            
+            #FOR SOME REASON, X AND Y ARE SWAPPED WHEN WE ACTUALLY GO AND TRANSPOSE. DO NOT KNOW WHY, THIS MAKES IT SO THAT THE USER DOESN'T HAVE TO REMEMBER THE SWAP
+            self.robot_eef_pos_min = np.array([robot_eef_pos_min[1], robot_eef_pos_min[0], robot_eef_pos_min[2]])
+            self.robot_eef_pos_max = np.array([robot_eef_pos_max[1], robot_eef_pos_max[0], robot_eef_pos_max[2]])
+            self.robot_eef_rot_min = np.array([robot_eef_rot_min[1], robot_eef_rot_min[0], robot_eef_rot_min[2]])
+            self.robot_eef_rot_max = np.array([robot_eef_rot_max[1], robot_eef_rot_max[0], robot_eef_rot_max[2]])
 
         super().__init__(
             robots=robots,
@@ -581,16 +605,51 @@ class Lift(OldLift):
             camera_depths=camera_depths,
             placement_initializer=placement_initializer
         )
-        self.randomize_shapes = randomize_shapes
-        if randomize_shapes:
-            self.block_min = block_min
-            self.block_max = block_max
-        else:
-            self.block_min = [0.020, 0.020, 0.020]
-            self.block_max = [0.022, 0.022, 0.022]
 
 
-   
+
+
+    def reset(self):
+        obs = super().reset()
+        
+        if self.robot_eef_init_randomization:
+            dpos = np.random.uniform(self.robot_eef_pos_min, self.robot_eef_pos_max)
+            drot = np.random.uniform(self.robot_eef_rot_min, self.robot_eef_rot_max)
+            obs = self.teleport(None, None, drot, dpos=dpos)
+
+        return obs
+    
+    def teleport(self, cur_ee_pos, des_ee_pos, delta_rot, dpos = None):
+        """
+        Teleports the robot to a specific position. 
+        Uses a delta rotation as well as either absolute current/desired pos or delta pos.
+        This requires an IK controller!
+
+        Args: 
+            env: an instantiated env you want to change
+            cur_ee_pos: current ee pose from obs.
+            des_ee_pos: desired ee pose.
+            delta_rot: delta rotation in euler angles
+            dpos: delta position. If you pass this in, cur_ee_pos and des_ee_pos can be None, tp will just use dpos to move the robot
+        """
+
+        if dpos is None:
+            dpos = des_ee_pos - cur_ee_pos
+
+        drot = euler2mat(delta_rot)
+
+        
+        robot = self.robots[0]
+        controller = robot.controller
+        controller.converge_steps=100
+
+        jpos = controller.joint_positions_for_eef_command(dpos, drot, update_targets=True)
+        robot.set_robot_joint_positions(jpos)
+
+        observations = self._get_observations(force_update=True)
+
+        return observations
+    
     def _load_model(self):
         """
         Loads an xml model, puts it in self.model
