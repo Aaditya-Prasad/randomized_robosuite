@@ -14,6 +14,9 @@ from robosuite.models.tasks import ManipulationTask
 from robosuite.utils.placement_samplers import UniformRandomSampler, SequentialCompositeSampler
 from robosuite.utils.observables import Observable, sensor
 
+from robosuite.utils.transform_utils import euler2mat
+
+
 
 class OldToolHang(SingleArmEnv):
     """
