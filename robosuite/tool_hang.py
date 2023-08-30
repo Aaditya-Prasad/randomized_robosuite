@@ -222,94 +222,94 @@ class OldToolHang(SingleArmEnv):
         """
         super()._load_model()
 
-        # Adjust base pose accordingly
-        xpos = self.robots[0].robot_model.base_xpos_offset["table"](self.table_full_size[0])
-        self.robots[0].robot_model.set_base_xpos(xpos)
+        # # Adjust base pose accordingly
+        # xpos = self.robots[0].robot_model.base_xpos_offset["table"](self.table_full_size[0])
+        # self.robots[0].robot_model.set_base_xpos(xpos)
 
-        # load model for table top workspace
-        mujoco_arena = TableArena(
-            table_full_size=self.table_full_size,
-            table_friction=self.table_friction,
-            table_offset=self.table_offset,
-        )
+        # # load model for table top workspace
+        # mujoco_arena = TableArena(
+        #     table_full_size=self.table_full_size,
+        #     table_friction=self.table_friction,
+        #     table_offset=self.table_offset,
+        # )
 
-        # Arena always gets set to zero origin
-        mujoco_arena.set_origin([0, 0, 0])
+        # # Arena always gets set to zero origin
+        # mujoco_arena.set_origin([0, 0, 0])
 
-        # Modify default agentview camera
-        mujoco_arena.set_camera(
-            camera_name="agentview",
-            pos=[0.4837275266036987, 0.2505579098815722, 1.2639379055124524],
-            quat=[0.39713290333747864, 0.27807527780532837, 0.5016612410545349, 0.7164464592933655]
-        )
+        # # Modify default agentview camera
+        # mujoco_arena.set_camera(
+        #     camera_name="agentview",
+        #     pos=[0.4837275266036987, 0.2505579098815722, 1.2639379055124524],
+        #     quat=[0.39713290333747864, 0.27807527780532837, 0.5016612410545349, 0.7164464592933655]
+        # )
 
-        # Add sideview
-        mujoco_arena.set_camera(
-            camera_name="sideview",
-            pos=[0.4837275266036987, 0.2505579098815722, 1.2139379055124524],
-            quat=[0.39713290333747864, 0.27807527780532837, 0.5016612410545349, 0.7164464592933655]
-        )
+        # # Add sideview
+        # mujoco_arena.set_camera(
+        #     camera_name="sideview",
+        #     pos=[0.4837275266036987, 0.2505579098815722, 1.2139379055124524],
+        #     quat=[0.39713290333747864, 0.27807527780532837, 0.5016612410545349, 0.7164464592933655]
+        # )
 
-        # Create stand, frame, and tool
-        self.stand_args = dict(
-            name="stand",
-            size=((12. / 100.), (14. / 100.), (16. / 100.)), # 14 cm x 12 cm base, with 16 cm height (in real world we cut the 32 cm height stand in half as well)
-            mount_location=(0., (4.5 / 100.)), # 2.5 cm from right edge, so 4.5 cm to the right
-            mount_width=(1.2 / 100.), # 1.2 cm thickness for rod cavity
-            wall_thickness=(0.1 / 100.), # about 0.1-0.2 cm thickness for walls
-            base_thickness=(1 / 100.), # increased thickness to 1 cm (different from real)
-            initialize_on_side=False,
-            add_hole_vis=True,
-            density=50000.,
-            solref=(0.02, 1.),
-            solimp=(0.998, 0.998, 0.001),
-        )
-        self.stand = StandWithMount(**self.stand_args)
+        # # Create stand, frame, and tool
+        # self.stand_args = dict(
+        #     name="stand",
+        #     size=((12. / 100.), (14. / 100.), (16. / 100.)), # 14 cm x 12 cm base, with 16 cm height (in real world we cut the 32 cm height stand in half as well)
+        #     mount_location=(0., (4.5 / 100.)), # 2.5 cm from right edge, so 4.5 cm to the right
+        #     mount_width=(1.2 / 100.), # 1.2 cm thickness for rod cavity
+        #     wall_thickness=(0.1 / 100.), # about 0.1-0.2 cm thickness for walls
+        #     base_thickness=(1 / 100.), # increased thickness to 1 cm (different from real)
+        #     initialize_on_side=False,
+        #     add_hole_vis=True,
+        #     density=50000.,
+        #     solref=(0.02, 1.),
+        #     solimp=(0.998, 0.998, 0.001),
+        # )
+        # self.stand = StandWithMount(**self.stand_args)
 
-        self.frame_args = dict(
-            name="frame",
-            frame_length=(9.5 / 100.), # 9.5 cm wide
-            frame_height=(18. / 100.), # 18 cm tall (in real world we cut the physical 36 cm rod in half as well)
-            frame_thickness=(0.75 / 100.), # 0.75 cm thick
-            hook_height=(1.2 / 100.), # lowered to 1.2 cm tall (instead of 1.7 cm in real world)
-            grip_location=((9. - 3.) / 100.) - (0.75 / 200.), # move up by half height of frame minus half height of grip minus half thickness
-            grip_size=((2.54 / 200.), (6.35 / 200.)), # 6.35 cm length, 2.54 cm thick
-            tip_size=((2.54 / 200.), (0.2 / 200.), (0.65 / 200.), (1.905 / 100.)), # 1-inch cylinder, 0.65 inch solder tip
-            density=500.,
-            solref=(0.02, 1.),
-            solimp=(0.998, 0.998, 0.001),
-        )
-        self.frame = HookFrame(**self.frame_args)
+        # self.frame_args = dict(
+        #     name="frame",
+        #     frame_length=(9.5 / 100.), # 9.5 cm wide
+        #     frame_height=(18. / 100.), # 18 cm tall (in real world we cut the physical 36 cm rod in half as well)
+        #     frame_thickness=(0.75 / 100.), # 0.75 cm thick
+        #     hook_height=(1.2 / 100.), # lowered to 1.2 cm tall (instead of 1.7 cm in real world)
+        #     grip_location=((9. - 3.) / 100.) - (0.75 / 200.), # move up by half height of frame minus half height of grip minus half thickness
+        #     grip_size=((2.54 / 200.), (6.35 / 200.)), # 6.35 cm length, 2.54 cm thick
+        #     tip_size=((2.54 / 200.), (0.2 / 200.), (0.65 / 200.), (1.905 / 100.)), # 1-inch cylinder, 0.65 inch solder tip
+        #     density=500.,
+        #     solref=(0.02, 1.),
+        #     solimp=(0.998, 0.998, 0.001),
+        # )
+        # self.frame = HookFrame(**self.frame_args)
 
-        self.real_tool_args = dict(
-            name="tool",
-            handle_size=((16.5 / 200.), (1.75 / 200.), (0.32 / 200.)), # 16.5 cm length, 1.75 cm width, 0.32 cm thick (1.5 cm with foam)
-            outer_radius_1=(3.5 / 200.), # larger hole 3.5 cm outer diameter
-            inner_radius_1=(2.1 / 200.), # reduced larger hole 2.1 cm inner diameter (from real world 2.3 cm)
-            height_1=(0.7 / 200.), # 0.7 cm height
-            outer_radius_2=(3. / 200.), # smaller hole 3 cm outer diameter
-            inner_radius_2=(2. / 200.), # smaller hole 2 cm outer diameter
-            height_2=(0.7 / 200.), # 0.7 cm height
-            ngeoms=8,
-            grip_size=((3 / 200.), (8. / 200.)), # 8 cm length, 3 cm thick
-            density=2000.,
-            solref=(0.02, 1.),
-            solimp=(0.998, 0.998, 0.001),
-            friction=(0.95, 0.3, 0.1),
-        )
+        # self.real_tool_args = dict(
+        #     name="tool",
+        #     handle_size=((16.5 / 200.), (1.75 / 200.), (0.32 / 200.)), # 16.5 cm length, 1.75 cm width, 0.32 cm thick (1.5 cm with foam)
+        #     outer_radius_1=(3.5 / 200.), # larger hole 3.5 cm outer diameter
+        #     inner_radius_1=(2.1 / 200.), # reduced larger hole 2.1 cm inner diameter (from real world 2.3 cm)
+        #     height_1=(0.7 / 200.), # 0.7 cm height
+        #     outer_radius_2=(3. / 200.), # smaller hole 3 cm outer diameter
+        #     inner_radius_2=(2. / 200.), # smaller hole 2 cm outer diameter
+        #     height_2=(0.7 / 200.), # 0.7 cm height
+        #     ngeoms=8,
+        #     grip_size=((3 / 200.), (8. / 200.)), # 8 cm length, 3 cm thick
+        #     density=2000.,
+        #     solref=(0.02, 1.),
+        #     solimp=(0.998, 0.998, 0.001),
+        #     friction=(0.95, 0.3, 0.1),
+        # )
 
-        self.tool_args = self.real_tool_args
-        self.tool = RatchetingWrenchObject(**self.tool_args)
+        # self.tool_args = self.real_tool_args
+        # self.tool = RatchetingWrenchObject(**self.tool_args)
 
-        # Create placement initializer
-        self._get_placement_initializer()
+        # # Create placement initializer
+        # self._get_placement_initializer()
 
-        # task includes arena, robot, and objects of interest
-        self.model = ManipulationTask(
-            mujoco_arena=mujoco_arena,
-            mujoco_robots=[robot.robot_model for robot in self.robots], 
-            mujoco_objects=[self.stand, self.frame, self.tool],
-        )
+        # # task includes arena, robot, and objects of interest
+        # self.model = ManipulationTask(
+        #     mujoco_arena=mujoco_arena,
+        #     mujoco_robots=[robot.robot_model for robot in self.robots], 
+        #     mujoco_objects=[self.stand, self.frame, self.tool],
+        # )
 
     def _get_placement_initializer(self):
         """
@@ -822,14 +822,14 @@ class ToolHang(OldToolHang):
         camera_depths=False,
         #randomization of objects
         randomize_shapes = False, 
-        stand_size0_range = None, 
-        stand_size1_range = None, 
-        stand_size2_range = None,
-        frame_length_range = None, 
-        frame_height_range = None,
-        handle_size0_range = None,
-        handle_size1_range = None,
-        handle_size2_range = None,
+        stand_size0_range = [12/100.0, 12/100.0], 
+        stand_size1_range = [16/100.0, 16/100.0],
+        stand_size2_range = [14/100.0, 14/100.0],
+        frame_length_range = [9.5 / 100., 9.5 / 100.],
+        frame_height_range = [18. / 100., 18. / 100.],
+        handle_size0_range = [16.5 / 200., 16.5 / 200.],
+        handle_size1_range = [1.75 / 200., 1.75 / 200.],
+        handle_size2_range = [0.32 / 200., 0.32 / 200.],
         #randomization of robot eef
         robot_eef_init_randomization = False,
         ##these should all be 3-tuples
@@ -847,7 +847,8 @@ class ToolHang(OldToolHang):
             self.frame_length = random.uniform(frame_length_range[0], frame_length_range[1])
             self.frame_height = random.uniform(frame_height_range[0], frame_height_range[1])
             self.handle_size = [random.uniform(handle_size0_range[0], handle_size0_range[1]), random.uniform(handle_size1_range[0], handle_size1_range[1]), random.uniform(handle_size2_range[0], handle_size2_range[1])]
-
+            print("SIZES", self.stand_size, self.frame_length, self.frame_height, self.handle_size)
+        self.robot_eef_init_randomization = robot_eef_init_randomization
         if robot_eef_init_randomization:            
             #FOR SOME REASON, X AND Y ARE SWAPPED WHEN WE ACTUALLY GO AND TRANSPOSE. DO NOT KNOW WHY, THIS MAKES IT SO THAT THE USER DOESN'T HAVE TO REMEMBER THE SWAP
             self.robot_eef_pos_min = np.array([robot_eef_pos_min[1], robot_eef_pos_min[0], robot_eef_pos_min[2]])
@@ -929,7 +930,7 @@ class ToolHang(OldToolHang):
         # Create stand, frame, and tool
             self.stand_args = dict(
                 name="stand",
-                size=((self.stand_size[0] / 100.), (self.stand_size[1] / 100.), (self.stand_size[2] / 100.)), # 14 cm x 12 cm base, with 16 cm height (in real world we cut the 32 cm height stand in half as well)
+                size=((self.stand_size[0]), (self.stand_size[1]), (self.stand_size[2])), # 14 cm x 12 cm base, with 16 cm height (in real world we cut the 32 cm height stand in half as well)
                 mount_location=(0., (4.5 / 100.)), # 2.5 cm from right edge, so 4.5 cm to the right
                 mount_width=(1.2 / 100.), # 1.2 cm thickness for rod cavity
                 wall_thickness=(0.1 / 100.), # about 0.1-0.2 cm thickness for walls
@@ -944,8 +945,8 @@ class ToolHang(OldToolHang):
 
             self.frame_args = dict(
                 name="frame",
-                frame_length=(self.frame_length / 100.), # 9.5 cm wide
-                frame_height=(self.frame_height / 100.), # 18 cm tall (in real world we cut the physical 36 cm rod in half as well)
+                frame_length=(self.frame_length), # 9.5 cm wide
+                frame_height=(self.frame_height), # 18 cm tall (in real world we cut the physical 36 cm rod in half as well)
                 frame_thickness=(0.75 / 100.), # 0.75 cm thick
                 hook_height=(1.2 / 100.), # lowered to 1.2 cm tall (instead of 1.7 cm in real world)
                 grip_location=((9. - 3.) / 100.) - (0.75 / 200.), # move up by half height of frame minus half height of grip minus half thickness
@@ -959,7 +960,7 @@ class ToolHang(OldToolHang):
 
             self.real_tool_args = dict(
                 name="tool",
-                handle_size=((self.handle_size[0]/ 200.), (self.handle_size[1] / 200.), (self.handle_size[2] / 200.)), # 16.5 cm length, 1.75 cm width, 0.32 cm thick (1.5 cm with foam)
+                handle_size=((self.handle_size[0]), (self.handle_size[1]), (self.handle_size[2])), # 16.5 cm length, 1.75 cm width, 0.32 cm thick (1.5 cm with foam)
                 outer_radius_1=(3.5 / 200.), # larger hole 3.5 cm outer diameter
                 inner_radius_1=(2.1 / 200.), # reduced larger hole 2.1 cm inner diameter (from real world 2.3 cm)
                 height_1=(0.7 / 200.), # 0.7 cm height

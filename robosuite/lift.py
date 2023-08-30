@@ -250,67 +250,67 @@ class OldLift(SingleArmEnv):
         """
         super()._load_model()
 
-        # Adjust base pose accordingly
-        xpos = self.robots[0].robot_model.base_xpos_offset["table"](self.table_full_size[0])
-        self.robots[0].robot_model.set_base_xpos(xpos)
+        # # Adjust base pose accordingly
+        # xpos = self.robots[0].robot_model.base_xpos_offset["table"](self.table_full_size[0])
+        # self.robots[0].robot_model.set_base_xpos(xpos)
 
-        # load model for table top workspace
-        mujoco_arena = TableArena(
-            table_full_size=self.table_full_size,
-            table_friction=self.table_friction,
-            table_offset=self.table_offset,
-        )
+        # # load model for table top workspace
+        # mujoco_arena = TableArena(
+        #     table_full_size=self.table_full_size,
+        #     table_friction=self.table_friction,
+        #     table_offset=self.table_offset,
+        # )
 
-        # Arena always gets set to zero origin
-        mujoco_arena.set_origin([0, 0, 0])
+        # # Arena always gets set to zero origin
+        # mujoco_arena.set_origin([0, 0, 0])
 
-        # initialize objects of interest
-        tex_attrib = {
-            "type": "cube",
-        }
-        mat_attrib = {
-            "texrepeat": "1 1",
-            "specular": "0.4",
-            "shininess": "0.1",
-        }
-        redwood = CustomMaterial(
-            texture="WoodRed",
-            tex_name="redwood",
-            mat_name="redwood_mat",
-            tex_attrib=tex_attrib,
-            mat_attrib=mat_attrib,
-        )
-        self.cube = BoxObject(
-            name="cube",
-            size_min=[0.020, 0.020, 0.020],  # [0.015, 0.015, 0.015],
-            size_max=[0.022, 0.022, 0.022],  # [0.018, 0.018, 0.018])
-            rgba=[1, 0, 0, 1],
-            material=redwood,
-        )
+        # # initialize objects of interest
+        # tex_attrib = {
+        #     "type": "cube",
+        # }
+        # mat_attrib = {
+        #     "texrepeat": "1 1",
+        #     "specular": "0.4",
+        #     "shininess": "0.1",
+        # }
+        # redwood = CustomMaterial(
+        #     texture="WoodRed",
+        #     tex_name="redwood",
+        #     mat_name="redwood_mat",
+        #     tex_attrib=tex_attrib,
+        #     mat_attrib=mat_attrib,
+        # )
+        # self.cube = BoxObject(
+        #     name="cube",
+        #     size_min=[0.020, 0.020, 0.020],  # [0.015, 0.015, 0.015],
+        #     size_max=[0.022, 0.022, 0.022],  # [0.018, 0.018, 0.018])
+        #     rgba=[1, 0, 0, 1],
+        #     material=redwood,
+        # )
 
-        # Create placement initializer
-        if self.placement_initializer is not None:
-            self.placement_initializer.reset()
-            self.placement_initializer.add_objects(self.cube)
-        else:
-            self.placement_initializer = UniformRandomSampler(
-                name="ObjectSampler",
-                mujoco_objects=self.cube,
-                x_range=[-0.03, 0.03],
-                y_range=[-0.03, 0.03],
-                rotation=None,
-                ensure_object_boundary_in_range=False,
-                ensure_valid_placement=True,
-                reference_pos=self.table_offset,
-                z_offset=0.01,
-            )
+        # # Create placement initializer
+        # if self.placement_initializer is not None:
+        #     self.placement_initializer.reset()
+        #     self.placement_initializer.add_objects(self.cube)
+        # else:
+        #     self.placement_initializer = UniformRandomSampler(
+        #         name="ObjectSampler",
+        #         mujoco_objects=self.cube,
+        #         x_range=[-0.03, 0.03],
+        #         y_range=[-0.03, 0.03],
+        #         rotation=None,
+        #         ensure_object_boundary_in_range=False,
+        #         ensure_valid_placement=True,
+        #         reference_pos=self.table_offset,
+        #         z_offset=0.01,
+        #     )
 
-        # task includes arena, robot, and objects of interest
-        self.model = ManipulationTask(
-            mujoco_arena=mujoco_arena,
-            mujoco_robots=[robot.robot_model for robot in self.robots], 
-            mujoco_objects=self.cube,
-        )
+        # # task includes arena, robot, and objects of interest
+        # self.model = ManipulationTask(
+        #     mujoco_arena=mujoco_arena,
+        #     mujoco_robots=[robot.robot_model for robot in self.robots], 
+        #     mujoco_objects=self.cube,
+        # )
 
     def _setup_references(self):
         """
@@ -559,6 +559,10 @@ class Lift(OldLift):
         robot_eef_pos_max = None,
         robot_eef_rot_min = None,
         robot_eef_rot_max = None,
+        #block position randomization
+        block_pos_randomization = False,
+        block_x_range = None,
+        block_y_range = None,
     ):
 
         self.randomize_shapes = randomize_shapes
@@ -576,6 +580,13 @@ class Lift(OldLift):
             self.robot_eef_pos_max = np.array([robot_eef_pos_max[1], robot_eef_pos_max[0], robot_eef_pos_max[2]])
             self.robot_eef_rot_min = np.array([robot_eef_rot_min[1], robot_eef_rot_min[0], robot_eef_rot_min[2]])
             self.robot_eef_rot_max = np.array([robot_eef_rot_max[1], robot_eef_rot_max[0], robot_eef_rot_max[2]])
+
+        if block_pos_randomization:
+            self.block_x_range = block_x_range
+            self.block_y_range = block_y_range
+        else:
+            self.block_x_range = [-0.08, 0.08]
+            self.block_y_range = [-0.08, 0.08]
 
         super().__init__(
             robots=robots,
@@ -702,8 +713,8 @@ class Lift(OldLift):
             self.placement_initializer = UniformRandomSampler(
                 name="ObjectSampler",
                 mujoco_objects=self.cube,
-                x_range=[-0.08, 0.08],
-                y_range=[-0.08, 0.08],
+                x_range=self.cube_x_range,
+                y_range=self.cube_y_range,
                 rotation=[0, np.pi/2],
                 ensure_object_boundary_in_range=False,
                 ensure_valid_placement=True,
