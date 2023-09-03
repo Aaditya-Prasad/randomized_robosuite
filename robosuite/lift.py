@@ -16,7 +16,7 @@ from robosuite.utils.transform_utils import euler2mat
 
 import random
 
-class OldLift(SingleArmEnv):
+class Lift(SingleArmEnv):
     """
     This class corresponds to the lifting task for a single robot arm.
 
@@ -411,7 +411,7 @@ class OldLift(SingleArmEnv):
         return cube_height > table_height + 0.04
 
 
-class Lift(OldLift):
+class RandomizedLift(Lift):
     """
     This class corresponds to the lifting task for a single robot arm.
 
@@ -713,8 +713,8 @@ class Lift(OldLift):
             self.placement_initializer = UniformRandomSampler(
                 name="ObjectSampler",
                 mujoco_objects=self.cube,
-                x_range=self.cube_x_range,
-                y_range=self.cube_y_range,
+                x_range=self.block_x_range,
+                y_range=self.block_y_range,
                 rotation=[0, np.pi/2],
                 ensure_object_boundary_in_range=False,
                 ensure_valid_placement=True,

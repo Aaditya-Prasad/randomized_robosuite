@@ -18,7 +18,7 @@ from robosuite.utils.transform_utils import euler2mat
 
 
 
-class OldToolHang(SingleArmEnv):
+class ToolHang(SingleArmEnv):
     """
     This class corresponds to the tool hang task for a single robot arm.
 
@@ -688,7 +688,7 @@ class OldToolHang(SingleArmEnv):
         ])
 
 
-class ToolHang(OldToolHang):
+class RandomizedToolHang(ToolHang):
     """
     This class corresponds to the tool hang task for a single robot arm.
 

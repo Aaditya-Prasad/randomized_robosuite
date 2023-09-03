@@ -691,7 +691,7 @@ class NutAssemblySingle(NutAssembly):
         super().__init__(single_object_mode=1, **kwargs)
 
 
-class OldNutAssemblySquare(NutAssembly):
+class NutAssemblySquare(NutAssembly):
     """
     Easier version of task - place one square nut into its peg.
     """
@@ -711,7 +711,7 @@ class NutAssemblyRound(NutAssembly):
         super().__init__(single_object_mode=2, nut_type="round", **kwargs)
 
 
-class NutAssemblySquare(OldNutAssemblySquare):
+class RandomizedNutAssemblySquare(NutAssemblySquare):
     
     def __init__(self, 
                 x_range = [-0.115, -0.11],

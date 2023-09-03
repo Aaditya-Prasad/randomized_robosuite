@@ -809,7 +809,7 @@ class PickPlaceCereal(PickPlace):
         super().__init__(single_object_mode=2, object_type="cereal", **kwargs)
 
 
-class OldPickPlaceCan(PickPlace):
+class PickPlaceCan(PickPlace):
     """
     Easier version of task - place one can into its bin.
     """
@@ -818,7 +818,7 @@ class OldPickPlaceCan(PickPlace):
         assert "single_object_mode" not in kwargs and "object_type" not in kwargs, "invalid set of arguments"
         super().__init__(single_object_mode=2, object_type="can", **kwargs)
 
-class PickPlaceCan(OldPickPlaceCan):
+class RandomizedPickPlaceCan(PickPlaceCan):
     """
     Can task with option for randomized eef start position
     """
