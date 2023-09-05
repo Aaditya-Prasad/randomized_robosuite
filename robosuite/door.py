@@ -12,7 +12,7 @@ from robosuite.utils.transform_utils import euler2mat
 
 
 
-class OldDoor(SingleArmEnv):
+class Door(SingleArmEnv):
     """
     This class corresponds to the door opening task for a single robot arm.
 
@@ -463,7 +463,7 @@ class OldDoor(SingleArmEnv):
         return self._handle_xpos - self._eef_xpos
 
 
-class Door(OldDoor):
+class RandomizedDoor(Door):
     def __init__(self,
                 #position randomization
                 x_range = [0.07, 0.09],
