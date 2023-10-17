@@ -411,113 +411,10 @@ class Lift(SingleArmEnv):
         return cube_height > table_height + 0.04
 
 
+
 class RandomizedLift(Lift):
     """
     This class corresponds to the lifting task for a single robot arm.
-
-    Args:
-        robots (str or list of str): Specification for specific robot arm(s) to be instantiated within this env
-            (e.g: "Sawyer" would generate one arm; ["Panda", "Panda", "Sawyer"] would generate three robot arms)
-            Note: Must be a single single-arm robot!
-
-        env_configuration (str): Specifies how to position the robots within the environment (default is "default").
-            For most single arm environments, this argument has no impact on the robot setup.
-
-        controller_configs (str or list of dict): If set, contains relevant controller parameters for creating a
-            custom controller. Else, uses the default controller for this specific task. Should either be single
-            dict if same controller is to be used for all robots or else it should be a list of the same length as
-            "robots" param
-
-        gripper_types (str or list of str): type of gripper, used to instantiate
-            gripper models from gripper factory. Default is "default", which is the default grippers(s) associated
-            with the robot(s) the 'robots' specification. None removes the gripper, and any other (valid) model
-            overrides the default gripper. Should either be single str if same gripper type is to be used for all
-            robots or else it should be a list of the same length as "robots" param
-
-        initialization_noise (dict or list of dict): Dict containing the initialization noise parameters.
-            The expected keys and corresponding value types are specified below:
-
-            :`'magnitude'`: The scale factor of uni-variate random noise applied to each of a robot's given initial
-                joint positions. Setting this value to `None` or 0.0 results in no noise being applied.
-                If "gaussian" type of noise is applied then this magnitude scales the standard deviation applied,
-                If "uniform" type of noise is applied then this magnitude sets the bounds of the sampling range
-            :`'type'`: Type of noise to apply. Can either specify "gaussian" or "uniform"
-
-            Should either be single dict if same noise value is to be used for all robots or else it should be a
-            list of the same length as "robots" param
-
-            :Note: Specifying "default" will automatically use the default noise settings.
-                Specifying None will automatically create the required dict with "magnitude" set to 0.0.
-
-        table_full_size (3-tuple): x, y, and z dimensions of the table.
-
-        table_friction (3-tuple): the three mujoco friction parameters for
-            the table.
-
-        use_camera_obs (bool): if True, every observation includes rendered image(s)
-
-        use_object_obs (bool): if True, include object (cube) information in
-            the observation.
-
-        reward_scale (None or float): Scales the normalized reward function by the amount specified.
-            If None, environment reward remains unnormalized
-
-        reward_shaping (bool): if True, use dense rewards.
-
-        placement_initializer (ObjectPositionSampler): if provided, will
-            be used to place objects on every reset, else a UniformRandomSampler
-            is used by default.
-
-        has_renderer (bool): If true, render the simulation state in
-            a viewer instead of headless mode.
-
-        has_offscreen_renderer (bool): True if using off-screen rendering
-
-        render_camera (str): Name of camera to render if `has_renderer` is True. Setting this value to 'None'
-            will result in the default angle being applied, which is useful as it can be dragged / panned by
-            the user using the mouse
-
-        render_collision_mesh (bool): True if rendering collision meshes in camera. False otherwise.
-
-        render_visual_mesh (bool): True if rendering visual meshes in camera. False otherwise.
-
-        render_gpu_device_id (int): corresponds to the GPU device id to use for offscreen rendering.
-            Defaults to -1, in which case the device will be inferred from environment variables
-            (GPUS or CUDA_VISIBLE_DEVICES).
-
-        control_freq (float): how many control signals to receive in every second. This sets the amount of
-            simulation time that passes between every action input.
-
-        horizon (int): Every episode lasts for exactly @horizon timesteps.
-
-        ignore_done (bool): True if never terminating the environment (ignore @horizon).
-
-        hard_reset (bool): If True, re-loads model, sim, and render object upon a reset call, else,
-            only calls sim.reset and resets all robosuite-internal variables
-
-        camera_names (str or list of str): name of camera to be rendered. Should either be single str if
-            same name is to be used for all cameras' rendering or else it should be a list of cameras to render.
-
-            :Note: At least one camera must be specified if @use_camera_obs is True.
-
-            :Note: To render all robots' cameras of a certain type (e.g.: "robotview" or "eye_in_hand"), use the
-                convention "all-{name}" (e.g.: "all-robotview") to automatically render all camera images from each
-                robot's camera list).
-
-        camera_heights (int or list of int): height of camera frame. Should either be single int if
-            same height is to be used for all cameras' frames or else it should be a list of the same length as
-            "camera names" param.
-
-        camera_widths (int or list of int): width of camera frame. Should either be single int if
-            same width is to be used for all cameras' frames or else it should be a list of the same length as
-            "camera names" param.
-
-        camera_depths (bool or list of bool): True if rendering RGB-D, and RGB otherwise. Should either be single
-            bool if same depth setting is to be used for all cameras or else it should be a list of the same length as
-            "camera names" param.
-
-    Raises:
-        AssertionError: [Invalid number of robots specified]
     """
 
     def __init__(
@@ -553,14 +450,14 @@ class RandomizedLift(Lift):
         block_min = None,
         block_max = None,
         #robot eef init randomization
-        robot_eef_init_randomization = False,
+        randomize_robot_eef_init = False,
         ##these should all be 3-tuples
         robot_eef_pos_min = None,
         robot_eef_pos_max = None,
         robot_eef_rot_min = None,
         robot_eef_rot_max = None,
         #block position randomization
-        block_pos_randomization = False,
+        randomize_block_pos = False,
         block_x_range = None,
         block_y_range = None,
     ):
@@ -573,15 +470,15 @@ class RandomizedLift(Lift):
             self.block_min = [0.020, 0.020, 0.020]
             self.block_max = [0.022, 0.022, 0.022]
 
-        self.robot_eef_init_randomization = robot_eef_init_randomization
-        if robot_eef_init_randomization:            
+        self.randomize_robot_eef_init = randomize_robot_eef_init
+        if randomize_robot_eef_init:            
             #FOR SOME REASON, X AND Y ARE SWAPPED WHEN WE ACTUALLY GO AND TRANSPOSE. DO NOT KNOW WHY, THIS MAKES IT SO THAT THE USER DOESN'T HAVE TO REMEMBER THE SWAP
             self.robot_eef_pos_min = np.array([robot_eef_pos_min[1], robot_eef_pos_min[0], robot_eef_pos_min[2]])
             self.robot_eef_pos_max = np.array([robot_eef_pos_max[1], robot_eef_pos_max[0], robot_eef_pos_max[2]])
             self.robot_eef_rot_min = np.array([robot_eef_rot_min[1], robot_eef_rot_min[0], robot_eef_rot_min[2]])
             self.robot_eef_rot_max = np.array([robot_eef_rot_max[1], robot_eef_rot_max[0], robot_eef_rot_max[2]])
 
-        if block_pos_randomization:
+        if randomize_block_pos:
             self.block_x_range = block_x_range
             self.block_y_range = block_y_range
         else:
@@ -622,14 +519,26 @@ class RandomizedLift(Lift):
 
     def reset(self):
         obs = super().reset()
+        self.on_table_cube_height = self.model.mujoco_arena.table_offset[2] + self.cube.size[2] / 2
         
-        if self.robot_eef_init_randomization:
+        if self.randomize_robot_eef_init:
             dpos = np.random.uniform(self.robot_eef_pos_min, self.robot_eef_pos_max)
             drot = np.random.uniform(self.robot_eef_rot_min, self.robot_eef_rot_max)
             obs = self.teleport(None, None, drot, dpos=dpos)
 
         return obs
-    
+
+    def reward(self, action=None):
+        if not hasattr(self, 'on_table_cube_height'):
+            return super().reward(action=action)
+        curr_cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
+        ORIGINAL_SUCCESS_LIFT_DELTA = 0.04
+        ORIGINAL_CUBE_HEIGHT = 0.023
+        SCALED_SUCCESS_LIFT_DELTA = self.cube.size[2] / ORIGINAL_CUBE_HEIGHT * ORIGINAL_SUCCESS_LIFT_DELTA
+        curr_lift_delta = curr_cube_height - self.on_table_cube_height
+        reward = 1.0 if curr_cube_height - self.on_table_cube_height > SCALED_SUCCESS_LIFT_DELTA else 0.0
+        return reward
+
     def teleport(self, cur_ee_pos, des_ee_pos, delta_rot, dpos = None):
         """
         Teleports the robot to a specific position. 

@@ -188,7 +188,7 @@ task:
     fps: 10
     max_steps: 400
     n_action_steps: 8
-    n_envs: 28
+    n_envs: 1  # set to one for non flickering rendering
     n_obs_steps: 2
     n_test: 50
     n_test_vis: 4
