@@ -820,16 +820,19 @@ class RandomizedToolHang(ToolHang):
         camera_heights=256,
         camera_widths=256,
         camera_depths=False,
-        #randomization of objects
+        #randomization of object sizes
         randomize_shapes = False, 
         stand_size0_range = [12/100.0, 12/100.0], 
         stand_size1_range = [16/100.0, 16/100.0],
         stand_size2_range = [14/100.0, 14/100.0],
-        frame_length_range = [9.5 / 100., 9.5 / 100.],
-        frame_height_range = [18. / 100., 18. / 100.],
-        handle_size0_range = [16.5 / 200., 16.5 / 200.],
+        frame_length_range = [9.5 / 100., 15 / 100.],
+        frame_height_range = [13. / 100., 23. / 100.],
+        handle_size0_range = [25 / 200., 25 / 200.],
         handle_size1_range = [1.75 / 200., 1.75 / 200.],
         handle_size2_range = [0.32 / 200., 0.32 / 200.],
+        #randomization of object placements
+        x_tols = [.06, .06, .06],
+        y_tols = [.08, .08, .08],
         #randomization of robot eef
         robot_eef_init_randomization = False,
         ##these should all be 3-tuples
@@ -855,6 +858,9 @@ class RandomizedToolHang(ToolHang):
             self.robot_eef_pos_max = np.array([robot_eef_pos_max[1], robot_eef_pos_max[0], robot_eef_pos_max[2]])
             self.robot_eef_rot_min = np.array([robot_eef_rot_min[1], robot_eef_rot_min[0], robot_eef_rot_min[2]])
             self.robot_eef_rot_max = np.array([robot_eef_rot_max[1], robot_eef_rot_max[0], robot_eef_rot_max[2]])
+
+        self.x_tols = x_tols
+        self.y_tols = y_tols
 
         super().__init__(
             robots=robots,
@@ -1030,7 +1036,7 @@ class RandomizedToolHang(ToolHang):
             self.tool = RatchetingWrenchObject(**self.tool_args)
 
         # Create placement initializer
-        self._get_placement_initializer()
+        self._get_random_placement_initializer()
 
         # task includes arena, robot, and objects of interest
         self.model = ManipulationTask(
@@ -1038,6 +1044,48 @@ class RandomizedToolHang(ToolHang):
             mujoco_robots=[robot.robot_model for robot in self.robots], 
             mujoco_objects=[self.stand, self.frame, self.tool],
         )
+
+    def _get_random_placement_initializer(self):
+        """
+        Helper function for defining placement initializer and object sampling bounds
+        """
+        # Create placement initializer
+        self.placement_initializer = SequentialCompositeSampler(name="ObjectSampler")
+
+        # Pre-define settings for each object's placement
+        objects = [self.stand, self.frame, self.tool]
+        x_centers = [-self.table_full_size[0] * 0.1, -self.table_full_size[0] * 0.05, self.table_full_size[0] * 0.05]
+        y_centers = [0., -self.table_full_size[1] * 0.3, -self.table_full_size[1] * 0.25]
+        x_tols = self.x_tols
+        y_tols = self.y_tols
+        rot_centers = [0, (-np.pi / 2) + (np.pi / 6), (-np.pi / 2) - (np.pi / 9.)]
+        rot_tols = [0., np.pi / 18, np.pi / 18.]
+        rot_axes = ['z', 'y', 'z']
+        z_offsets = [
+            0.001, 
+            (self.frame_args["frame_thickness"] - self.frame_args["frame_height"]) / 2. + 0.001 + (self.stand_args["base_thickness"] / 2.) + (self.frame_args["grip_size"][1]),
+            0.001,
+        ]
+        if ("tip_size" in self.frame_args) and (self.frame_args["tip_size"] is not None):
+            z_offsets[1] -= (self.frame_args["tip_size"][0] + 2. * self.frame_args["tip_size"][3])
+        for obj, x, y, x_tol, y_tol, r, r_tol, r_axis, z_offset in zip(
+                objects, x_centers, y_centers, x_tols, y_tols, rot_centers, rot_tols, rot_axes, z_offsets
+        ):
+            # Create sampler for this object and add it to the sequential sampler
+            self.placement_initializer.append_sampler(
+                sampler=UniformRandomSampler(
+                    name=f"{obj.name}ObjectSampler",
+                    mujoco_objects=obj,
+                    x_range=[x - x_tol, x + x_tol],
+                    y_range=[y - y_tol, y + y_tol],
+                    rotation=[r - r_tol, r + r_tol],
+                    rotation_axis=r_axis,
+                    ensure_object_boundary_in_range=False,
+                    ensure_valid_placement=False,
+                    reference_pos=self.table_offset,
+                    z_offset=z_offset,
+                )
+            )
 
     
     def reset(self):
