@@ -563,7 +563,15 @@ class RandomizedLift(Lift):
         controller = robot.controller
         controller.converge_steps=100
 
-        jpos = controller.joint_positions_for_eef_command(dpos, drot, update_targets=True)
+        if hasattr(controller, "joint_positions_for_eef_command"):
+            jpos = controller.joint_positions_for_eef_command(dpos, drot, update_targets=True)
+        else:
+            print("[lift.py] Controller doesn't include IK: perturbing init joint angles instead")
+            low = -np.ones(robot.init_qpos.shape) * 0.25
+            high = np.ones(robot.init_qpos.shape) * 0.25
+            random_vector = np.random.uniform(low, high, robot.init_qpos.shape)
+            jpos = robot.init_qpos + random_vector
+
         robot.set_robot_joint_positions(jpos)
 
         observations = self._get_observations(force_update=True)
